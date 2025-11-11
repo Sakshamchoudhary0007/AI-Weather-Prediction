@@ -37,11 +37,12 @@ It also includes AI logic (using NumPy) to predict temperature trends and visual
 
 ```mermaid
 flowchart TD
-A[User Enters City Name] --> B[Flask App Calls OpenWeather API]
-B --> C[Fetch Real-time Weather Data (JSON)]
-C --> D[AI Logic Processes Weekly Trends]
-D --> E[Generate Charts and Predictions]
-E --> F[Display on Dashboard (HTML + Chart.js)]
+    A[User Enters City Name] --> B[Flask App Calls OpenWeather API]
+    B --> C[Fetch Real-time Weather Data (JSON)]
+    C --> D[AI Logic Processes Weekly Trends]
+    D --> E[Generate Charts and Predictions]
+    E --> F[Display on Dashboard (HTML + Chart.js)]
+
 
 
 🚀 How to Run This Project
