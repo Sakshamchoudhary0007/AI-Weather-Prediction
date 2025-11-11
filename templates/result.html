@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Weather Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="container">
+
+    <div class="top-bar">
+        <a href="/" class="btn-small">🏙️ New Search</a>
+    </div>
+
+    <h2>📍 {{ city }}</h2>
+    <p class="date">🗓️ {{ current_time }}</p>
+
+    <div class="weather-cards">
+        <div class="card">
+            <h3>🌡️ Temperature</h3>
+            <p>{{ current_temp }}°C</p>
+        </div>
+        <div class="card">
+            <h3>💧 Humidity</h3>
+            <p>{{ current_humidity }}%</p>
+        </div>
+        <div class="card">
+            <h3>💨 Wind</h3>
+            <p>{{ current_wind }} km/h</p>
+        </div>
+        <div class="card">
+            <h3>🌤️ Condition</h3>
+            <p>{{ current_desc }}</p>
+        </div>
+    </div>
+
+    <!-- Inline search with suggestion -->
+    <form action="/predict" method="POST" class="inline-form">
+        <input type="text" name="city" placeholder="Search another city..." list="citySuggestions" required>
+        <button type="submit">Search</button>
+    </form>
+
+    <hr>
+    <h3>📅 Weekly Forecast</h3>
+    <table>
+        <tr>
+            <th>Day</th>
+            <th>Temp (°C)</th>
+            <th>Condition</th>
+            <th>Wind (km/h)</th>
+            <th>Humidity (%)</th>
+        </tr>
+        {% for day in forecast %}
+        <tr>
+            <td>{{ day.day }}</td>
+            <td>{{ day.temp }}</td>
+            <td>{{ day.condition }}</td>
+            <td>{{ day.wind }}</td>
+            <td>{{ day.humidity }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <div class="chart-container">
+        <canvas id="tempChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="windChart"></canvas>
+    </div>
+
+    <hr>
+    <h3>🧠 AI Insights</h3>
+    <p><b>Temperature Trend:</b> {{ week_trend }}</p>
+    <p><b>Wind Condition:</b> {{ wind_trend }}</p>
+</div>
+
+<!-- 🔍 Auto-Suggestion Script -->
+<script>
+ async function loadCities() {
+      const response = await fetch("/static/cities.json");
+      const cities = await response.json();
+
+      const input = document.querySelector('input[name="city"]');
+      const dataList = document.createElement("datalist");
+      dataList.id = "citySuggestions";
+      document.body.appendChild(dataList);
+      input.setAttribute("list", "citySuggestions");
+
+      input.addEventListener("input", function() {
+          const val = this.value.toLowerCase();
+          dataList.innerHTML = "";
+
+          cities
+              .filter(c => c.name.toLowerCase().startsWith(val))
+              .slice(0, 10)
+              .forEach(c => {
+                  const option = document.createElement("option");
+                  option.value = `${c.name}, ${c.country}`;
+                  dataList.appendChild(option);
+              });
+      });
+  }
+
+  loadCities();
+</script>
+
+<!-- 🌡️ Chart Scripts -->
+<script>
+  const tempCtx = document.getElementById('tempChart').getContext('2d');
+  new Chart(tempCtx, {
+      type: 'line',
+      data: {
+          labels: [{% for d in forecast %}'{{ d.day }}',{% endfor %}],
+          datasets: [{
+              label: 'Temperature (°C)',
+              data: [{% for d in forecast %}{{ d.temp }},{% endfor %}],
+              borderColor: '#00ffff',
+              backgroundColor: 'rgba(0,255,255,0.2)',
+              borderWidth: 3,
+              pointBackgroundColor: '#00ffff',
+              pointBorderColor: '#00ffff',
+              fill: true,
+              tension: 0.3
+          }]
+      },
+      options: {
+          plugins: { legend: { labels: { color: '#00ffff' } } },
+          scales: {
+              x: { ticks: { color: '#00ffff' } },
+              y: { ticks: { color: '#00ffff' } }
+          }
+      }
+  });
+
+  const windCtx = document.getElementById('windChart').getContext('2d');
+  new Chart(windCtx, {
+      type: 'bar',
+      data: {
+          labels: [{% for d in forecast %}'{{ d.day }}',{% endfor %}],
+          datasets: [
+              {
+                  label: 'Wind Speed (km/h)',
+                  data: [{% for d in forecast %}{{ d.wind }},{% endfor %}],
+                  backgroundColor: 'rgba(0,255,255,0.4)',
+                  borderColor: '#00ffff',
+                  borderWidth: 1
+              },
+              {
+                  label: 'Humidity (%)',
+                  data: [{% for d in forecast %}{{ d.humidity }},{% endfor %}],
+                  backgroundColor: 'rgba(0,180,255,0.3)',
+                  borderColor: '#00ffff',
+                  borderWidth: 1
+              }
+          ]
+      },
+      options: {
+          plugins: { legend: { labels: { color: '#00ffff' } } },
+          scales: {
+              x: { ticks: { color: '#00ffff' } },
+              y: { ticks: { color: '#00ffff' } }
+          }
+      }
+  });
+</script>
+</body>
+</html>
